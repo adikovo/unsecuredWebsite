@@ -33,13 +33,15 @@ db.connect((err) => {
 app.post('/register', (req, res) => {
     const { username, password, email } = req.body;
 
-    const query = 'INSERT INTO users (username, password, email) VALUES (?, ?, ?)';
-    db.query(query, [username, password, email], (err, results) => {
+    const query = `INSERT INTO users (username, password, email) VALUES ('${username}', '${password}', '${email}')`;
+
+    db.query(query, (err, results) => {
         if (err) {
+            console.error('SQL Error:', err.message);
             if (err.code === 'ER_DUP_ENTRY') {
                 res.status(400).json({ error: 'Username already exists' });
             } else {
-                res.status(500).json({ error: 'Error registering user' });
+                res.status(500).json({ error: 'Database error: ' + err.message });
             }
             return;
         }
@@ -51,20 +53,25 @@ app.post('/register', (req, res) => {
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
-    const query = 'SELECT * FROM users WHERE username = ?';
-    db.query(query, [username], (err, results) => {
+    const query = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
+
+    db.query(query, (err, results) => {
         if (err) {
-            res.status(500).json({ error: 'Error during login' });
+            console.error('SQL Error:', err.message);
+            res.status(500).json({ error: 'Database error: ' + err.message });
             return;
         }
 
         if (results.length === 0) {
-            res.status(401).json({ error: 'Incorrect username' });
-            return;
-        }
-
-        if (results[0].password !== password) {
-            res.status(401).json({ error: 'Incorrect password' });
+            // Check if it's a username issue by doing a separate query
+            const userCheckQuery = `SELECT * FROM users WHERE username = '${username}'`;
+            db.query(userCheckQuery, (userErr, userResults) => {
+                if (userErr || userResults.length === 0) {
+                    res.status(401).json({ error: 'Incorrect username' });
+                } else {
+                    res.status(401).json({ error: 'Incorrect password' });
+                }
+            });
             return;
         }
 
@@ -110,10 +117,13 @@ app.post('/change-password', (req, res) => {
 app.get('/search-customers', (req, res) => {
     const { query } = req.query;
 
-    const searchQuery = 'SELECT id, name, email, address, package_type FROM customers WHERE name = ?';
-    db.query(searchQuery, [query], (err, results) => {
+    // VULNERABLE: Direct string concatenation - susceptible to SQL injection
+    const searchQuery = `SELECT id, name, email, address, package_type FROM customers WHERE name = '${query}'`;
+
+    db.query(searchQuery, (err, results) => {
         if (err) {
-            res.status(500).json({ error: 'Error searching customers' });
+            console.error('SQL Error:', err.message);
+            res.status(500).json({ error: 'Database error: ' + err.message });
             return;
         }
         res.json({ customers: results });

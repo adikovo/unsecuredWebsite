@@ -53,7 +53,7 @@
                     {% for c in customers %}
                     <tr>
                         <td>{{ c.id }}</td>
-                        <td>{{ c.name }}</td>
+                        <td>{{ c.name|safe }}</td>
                         <td>{{ c.email }}</td>
                         <td>{{ c.address }}</td>
                         <td>{{ c.package_type }}</td>
