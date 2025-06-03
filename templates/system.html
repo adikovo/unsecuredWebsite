@@ -21,22 +21,85 @@
             <input type="text" name="package_type" placeholder="Enter package type"><br><br>
             <button type="submit">Add Customer</button>
         </form>
+
+        <hr>
+
+        <form method="get" action="{{ url_for('system') }}">
+            <input type="hidden" name="action" value="search">
+            <input type="text" name="query" placeholder="Search customer by name" required>
+            <button type="submit">Search</button>
+        </form>
+
+        <form method="get" action="{{ url_for('system') }}">
+            <input type="hidden" name="action" value="list">
+            <button type="submit">Show All Customers</button>
+        </form>
+
+        {% if customers %}
+        <div id="customer-results">
+            <h3>Customer Results:</h3>
+            <button onclick="toggleResults()">Close table</button>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>Package Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.name }}</td>
+                        <td>{{ c.email }}</td>
+                        <td>{{ c.address }}</td>
+                        <td>{{ c.package_type }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
         <br>
         {% if customer_name %}
         <div class="success">Customer {{ customer_name }} added successfully!</div>
         {% endif %}
         <a href="{{ url_for('change_password') }}">Change Password</a> |
-        <a href="{{ url_for('login') }}">Logout</a>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <ul>
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        {% endwith %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                <li class="flash-{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+        </div>
     </div>
 </body>
+<script>
+    function toggleResults() {
+        const div = document.getElementById("customer-results");
+        if (div.style.display === "none") {
+            div.style.display = "block";
+        } else {
+            div.style.display = "none";
+        }
+    }
+
+    window.onload = function () {
+        const resultSection = document.getElementById("customer-results");
+        if (resultSection) {
+            resultSection.scrollIntoView({ behavior: "smooth" });
+        }
+    };
+</script>
 
 </html>

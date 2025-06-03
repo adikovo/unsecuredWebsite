@@ -25,12 +25,12 @@ def register():
                 'password': password
             })
             if r.status_code == 200:
-                flash('User registered successfully! Please login.')
+                flash('User registered successfully! Please login.', 'success')
                 return redirect(url_for('login'))
             else:
-                flash(r.json().get('error', 'Registration failed.'))
+                flash(r.json().get('error', 'Registration failed.'), 'error')
         except Exception as e:
-            flash('Could not connect to backend.')
+            flash('Could not connect to backend.', 'error')
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -49,11 +49,11 @@ def login():
             else:
                 error = r.json().get('error', 'Login failed.')
                 if error == 'Incorrect username':
-                    flash('user does not exist')
+                    flash('user does not exist', 'error')
                 else:
-                    flash(error)
+                    flash(error, 'error')
         except Exception as e:
-            flash('Could not connect to backend.')
+            flash('Could not connect to backend.', 'error')
     return render_template('login.html')
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -69,7 +69,7 @@ def forgot_password():
 def change_password():
     username = session.get('username')
     if not username:
-        flash('You must be logged in to change your password.')
+        flash('You must be logged in to change your password.', 'warning')
         return redirect(url_for('login'))
     if request.method == 'POST':
         new_password = request.form['new_password']
@@ -80,20 +80,24 @@ def change_password():
                 'newPassword': new_password
             })
             if r.status_code == 200:
-                flash('Password changed successfully!')
+                flash('Password changed successfully!', 'success')
                 return redirect(url_for('system'))
             else:
-                flash(r.json().get('error', 'Password change failed.'))
+                flash(r.json().get('error', 'Password change failed.'), 'error')
         except Exception as e:
-            flash('Could not connect to backend.')
+            flash('Could not connect to backend.', 'error')
     return render_template('change_password.html')
 
 @app.route('/system', methods=['GET', 'POST'])
 def system():
     if 'username' not in session:
         return redirect(url_for('login'))
+    
     customer_name = None
+    customers = None
+    
     if request.method == 'POST':
+        # Handle adding new customer
         name = request.form['name']
         email = request.form['email']
         address = request.form['address']
@@ -108,10 +112,39 @@ def system():
             if r.status_code == 200:
                 customer_name = name
             else:
-                flash(r.json().get('error', 'Failed to add customer.'))
+                flash(r.json().get('error', 'Failed to add customer.'), 'error')
         except Exception as e:
-            flash('Could not connect to backend.')
-    return render_template('system.html', customer_name=customer_name)
+            flash('Could not connect to backend.', 'error')
+    
+    elif request.method == 'GET':
+        # Handle search and list actions
+        action = request.args.get('action')
+        
+        if action == 'search':
+            query = request.args.get('query')
+            if query:
+                try:
+                    r = requests.get(f'{BACKEND_URL}/search-customers', params={'query': query})
+                    if r.status_code == 200:
+                        customers = r.json().get('customers', [])
+                        if not customers:
+                            flash(f'No customers found matching "{query}".', 'info')
+                    else:
+                        flash('Error searching customers.', 'error')
+                except Exception as e:
+                    flash('Could not connect to backend.', 'error')
+        
+        elif action == 'list':
+            try:
+                r = requests.get(f'{BACKEND_URL}/customers')
+                if r.status_code == 200:
+                    customers = r.json().get('customers', [])
+                else:
+                    flash('Error fetching customers.', 'error')
+            except Exception as e:
+                flash('Could not connect to backend.', 'error')
+    
+    return render_template('system.html', customer_name=customer_name, customers=customers)
 
 @app.route('/logout')
 def logout():

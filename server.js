@@ -106,6 +106,32 @@ app.post('/change-password', (req, res) => {
     });
 });
 
+// Search customers route
+app.get('/search-customers', (req, res) => {
+    const { query } = req.query;
+
+    const searchQuery = 'SELECT id, name, email, address, package_type FROM customers WHERE name = ?';
+    db.query(searchQuery, [query], (err, results) => {
+        if (err) {
+            res.status(500).json({ error: 'Error searching customers' });
+            return;
+        }
+        res.json({ customers: results });
+    });
+});
+
+// Get all customers route
+app.get('/customers', (req, res) => {
+    const query = 'SELECT id, name, email, address, package_type FROM customers';
+    db.query(query, (err, results) => {
+        if (err) {
+            res.status(500).json({ error: 'Error fetching customers' });
+            return;
+        }
+        res.json({ customers: results });
+    });
+});
+
 // Start server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
