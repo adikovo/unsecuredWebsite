@@ -189,13 +189,3 @@ Communication_LTD/
 └── static/
     └── style.css         # CSS styling
 ```
-1. stored XSS - system page: customer name input:  
-   Name: <script>alert('XSS Attack')</script> 
-   Email: test@test.com 
-   Address: Holon Package Type: Text 
-2. SQLI - register page: username input: 
-   username: ‘admin 
-3. SQLI - login page username input:  
-   username:  ' OR '1'='1 -- ' OR 1=1 LIMIT 5; -- 
-4. SQLI - system page search input:  
-   name: ' UNION SELECT id, username, email, email, 'user' FROM users --
